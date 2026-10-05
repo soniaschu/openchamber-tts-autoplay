@@ -1,45 +1,84 @@
 # OpenChamber TTS AutoPlay
 
-Automatic text-to-speech playback for OpenChamber assistant replies.
+Automatic read-aloud for completed OpenChamber assistant messages.
 
-The extension deliberately does not maintain its own voice, model, provider, or speed settings. It calls the OpenChamber SDK host with text only, so Settings → OpenChamber → Voice remains the single source of truth.
+## Important: OpenChamber owns the voice settings
 
-For the web UI, OpenChamber sends speech through its server-side TTS path and the host page decodes raw PCM with Web Audio.
+The extension does not have its own voice, model, endpoint, speed, pitch, volume, or provider configuration.
 
-## Install in OpenChamber
+Every automatic playback call is text-only:
 
-Open Settings → Extensions and paste:
+  host.speak({ text })
 
-https://github.com/soniaschu/openchamber-tts-autoplay-extension
+The OpenChamber host resolves the currently selected Settings -> OpenChamber -> Voice configuration at playback time. Therefore changing the OpenChamber voice/provider immediately changes AutoPlay too.
 
-OpenChamber supports Git installs and checks the repository version for updates. Ship the built panel and background bundles in the repository. Do not ship node_modules.
+Supported OpenChamber providers are followed as configured by the host:
 
-## Development
+- Browser speech synthesis
+- Local TTS
+- OpenAI
+- OpenAI-compatible
+- macOS say
 
-Source:
-- src/main.ts
-- src/background.ts
+AutoPlay therefore never silently falls back to its own NVIDIA/Magpie voice.
 
-Browser bundles:
+## Browser audio
+
+For server-backed OpenAI-compatible speech, OpenChamber uses signed 16-bit little-endian PCM for browser playback. The web client decodes PCM through Web Audio using the returned sample-rate/channel metadata.
+
+The BKG deployment exposes the OpenAI-compatible TTS proxy at:
+
+  https://bla.eysho.info/tts/v1
+
+The browser never receives the upstream BKG/NVIDIA secret.
+
+## Install directly from Git
+
+Use this URL in OpenChamber:
+
+  https://github.com/soniaschu/openchamber-tts-autoplay.git
+
+For a branch-pinned development install:
+
+  https://github.com/soniaschu/openchamber-tts-autoplay.git#main
+
+OpenChamber copies Git installations into its data directory and checks them for updates from Settings -> Extensions. Bump the extension version, rebuild, commit, and push to publish an update.
+
+## Build
+
+Requirements: Node 22+ and a local checkout of the OpenChamber SDK.
+
+Build the browser bundles:
+
+  npm run build
+
+Run checks:
+
+  npm run check
+
+Build the installable archives:
+
+  npm run package
+
+The compatibility archive requested by the BKG deployment is kept at:
+
+  dist/openchamber-tts-autoplay-0.1.0.zip
+
+The current repository release archive is:
+
+  dist/openchamber-tts-autoplay-0.2.0.zip
+
+## Security
+
+No API key is stored in the extension bundle or sent through extension storage. The extension asks the OpenChamber host to speak; the host and server-side TTS configuration own provider credentials.
+
+## Extension layout
+
+- package.json
+- panel/index.html
 - panel/main.js
+- panel/style.css
+- background/index.html
 - background/main.js
-
-Build with:
-node scripts/build.mjs
-
-Validate with:
-node --check panel/main.js
-node --check background/main.js
-node test/verify.mjs
-
-## Browser audio contract
-
-The browser-facing TTS response is signed 16-bit little-endian PCM.
-
-Headers:
-- content-type: audio/pcm;rate=<sample-rate>;channels=<channels>
-- x-audio-sample-rate
-- x-audio-channels
-- x-audio-bits: 16
-
-The upstream BKG TTS service may use WAV internally. The browser never receives the upstream credential.
+- assets/panel.svg
+- assets/speak.svg

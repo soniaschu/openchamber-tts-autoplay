@@ -1,6 +1,6 @@
 {
   "name": "openchamber-tts-autoplay",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Automatic BKG TTS playback for fresh OpenChamber assistant replies.",
   "license": "MIT",
   "type": "module",
