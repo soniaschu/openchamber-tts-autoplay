@@ -1,0 +1,54 @@
+{
+  "name": "openchamber-tts-autoplay",
+  "version": "0.1.2",
+  "description": "Automatic BKG TTS playback for fresh OpenChamber assistant replies.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node ./scripts/build.mjs",
+    "check": "node --check panel/main.js && node --check background/main.js && node test/verify.mjs",
+    "package": "npm run build && npm run check && mkdir -p dist && v=$(node -p \"require('./package.json').version\") && rm -f dist/openchamber-tts-autoplay-$v.zip dist/openchamber-tts-autoplay-0.1.0.zip && zip -X -q dist/openchamber-tts-autoplay-$v.zip package.json README.md panel/index.html panel/main.js panel/style.css background/index.html background/main.js assets/*.svg && cp dist/openchamber-tts-autoplay-$v.zip dist/openchamber-tts-autoplay-0.1.0.zip"
+  },
+  "openchamber": {
+    "apiVersion": 1,
+    "engines": {
+      "openchamber": ">=2.1.0"
+    },
+    "contributes": {
+      "panel": {
+        "id": "tts-autoplay",
+        "name": "TTS AutoPlay",
+        "icon": "assets/panel.svg",
+        "entry": "panel/index.html"
+      },
+      "background": {
+        "entry": "background/index.html"
+      },
+      "capabilities": [
+        "tts"
+      ],
+      "actions": [
+        {
+          "id": "speak-automatically",
+          "label": "AutoPlay TTS",
+          "icon": "assets/speak.svg",
+          "where": "message",
+          "mode": "background",
+          "automatic": true,
+          "roles": [
+            "assistant"
+          ]
+        }
+      ]
+    }
+  },
+  "dependencies": {
+    "@openchamber/sdk": "2.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0"
+  }
+}
